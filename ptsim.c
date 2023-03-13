@@ -22,7 +22,7 @@ int get_address(int page, int offset)
 }
 
 //
-// Initialize RAM
+// Initialize RAM - ELIZABETH: do we need to initialize everything to 0 in this function?
 //
 void initialize_mem(void)
 {
@@ -41,6 +41,19 @@ unsigned char get_page_table(int proc_num)
     return mem[ptp_addr];
 }
 
+
+// NEW FUNCTION BY ELIZABETH
+int allocate_page() {
+    for (int i = 1; i < 64; i++) {
+        if (mem[i] != 1) {
+            mem[i] = 1;
+            return i;
+        }
+    }
+    return 0xff; // indicating no free pages
+}
+
+
 //
 // Allocate pages for a new process
 //
@@ -48,10 +61,32 @@ unsigned char get_page_table(int proc_num)
 //
 void new_process(int proc_num, int page_count)
 {
-    (void)proc_num;   // remove after implementation
-    (void)page_count; // remove after implementation
+    // (void)proc_num;   // remove after implementation
+    // (void)page_count; // remove after implementation
 
     // TODO
+    int page_table = allocate_page();
+
+    if (page_table == 0xff) {
+        printf("OOM: proc %d: page table\n", proc_num);
+        return;
+    }
+
+    else {
+        mem[64 + proc_num] = page_table;
+
+        for (int i = 0; i < page_count; i++) {
+            int new_page = allocate_page();
+
+            if (new_page == 0xff) {
+                printf("OOM: proc %d: data page\n", proc_num);
+            }   
+            else {
+                int pt_addr = get_address(page_table, i);
+                mem[pt_addr] = new_page;
+            }
+        }
+    }
 }
 
 //
@@ -118,6 +153,10 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[i], "ppt") == 0) {
             int proc_num = atoi(argv[++i]);
             print_page_table(proc_num);
+        }
+        else if (strcmp(argv[i], "np") == 0) {
+            new_process(atoi(argv[i+1]), atoi(argv[i+2]));
+            i += 2;
         }
 
         // TODO: more command line arguments
