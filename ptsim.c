@@ -10,39 +10,31 @@
 
 #define PTP_OFFSET 64 // How far offset in page 0 is the page table pointer table
 
+
 // Simulated RAM
 unsigned char mem[MEM_SIZE];
 
-//
-// Convert a page,offset into an address
-//
-int get_address(int page, int offset)
-{
+
+int get_address(int page, int offset) {
     return (page << PAGE_SHIFT) | offset;
 }
 
-//
+
 // Initialize RAM - ELIZABETH: do we need to initialize everything to 0 in this function?
-//
-void initialize_mem(void)
-{
+void initialize_mem(void) {
     memset(mem, 0, MEM_SIZE);
 
     int zpfree_addr = get_address(0, 0);
     mem[zpfree_addr] = 1;  // Mark zero page as allocated
 }
 
-//
-// Get the page table page for a given process
-//
-unsigned char get_page_table(int proc_num)
-{
+
+unsigned char get_page_table(int proc_num) {
     int ptp_addr = get_address(0, PTP_OFFSET + proc_num);
     return mem[ptp_addr];
 }
 
 
-// NEW FUNCTION BY ELIZABETH
 int allocate_page() {
     for (int i = 1; i < 64; i++) {
         if (mem[i] != 1) {
@@ -54,17 +46,7 @@ int allocate_page() {
 }
 
 
-//
-// Allocate pages for a new process
-//
-// This includes the new process page table and page_count data pages.
-//
-void new_process(int proc_num, int page_count)
-{
-    // (void)proc_num;   // remove after implementation
-    // (void)page_count; // remove after implementation
-
-    // TODO
+void new_process(int proc_num, int page_count) {
     int page_table = allocate_page();
 
     if (page_table == 0xff) {
@@ -89,11 +71,7 @@ void new_process(int proc_num, int page_count)
     }
 }
 
-//
-// Print the free page map
-//
-// Don't modify this
-//
+
 void print_page_free_map(void)
 {
     printf("--- PAGE FREE MAP ---\n");
@@ -108,19 +86,12 @@ void print_page_free_map(void)
     }
 }
 
-//
-// Print the address map from virtual pages to physical
-//
-// Don't modify this
-//
-void print_page_table(int proc_num)
-{
+
+void print_page_table(int proc_num) {
     printf("--- PROCESS %d PAGE TABLE ---\n", proc_num);
 
-    // Get the page table for this process
     int page_table = get_page_table(proc_num);
 
-    // Loop through, printing out used pointers
     for (int i = 0; i < PAGE_COUNT; i++) {
         int addr = get_address(page_table, i);
 
@@ -132,11 +103,8 @@ void print_page_table(int proc_num)
     }
 }
 
-//
-// Main -- process command line
-//
-int main(int argc, char *argv[])
-{
+
+int main(int argc, char *argv[]) {
     assert(PAGE_COUNT * PAGE_SIZE == MEM_SIZE);
 
     if (argc == 1) {
