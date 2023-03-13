@@ -158,7 +158,9 @@ int main(int argc, char *argv[])
             new_process(atoi(argv[i+1]), atoi(argv[i+2]));
             i += 2;
         }
-
-        // TODO: more command line arguments
+        else {
+            fprintf(stderr, "usage: ptsim commands, \'%s\' not recognized\n", argv[i]);
+            return 1;
+        }
     }
 }
