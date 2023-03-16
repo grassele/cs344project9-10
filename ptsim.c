@@ -45,6 +45,13 @@ int allocate_page() {
     return 0xff; // indicating no free pages
 }
 
+// NEW BY ELIZABETH
+void deallocate_page(int p) {
+    if ((0 <= p) && (p < 64)) {
+        mem[p] = 0;
+    }
+}
+
 
 void new_process(int proc_num, int page_count) {
     int page_table = allocate_page();
@@ -71,6 +78,23 @@ void new_process(int proc_num, int page_count) {
     }
 }
 
+void kill_process(int p) {
+    if ((0 <= p) && (p < 64)) {
+        int page_table_page = mem[p + PTP_OFFSET];
+        
+        for (int offset = 0; offset <= 255; offset++) {
+            int page_address = get_address(page_table_page, offset);
+            if (mem[page_address] != 0) {
+                deallocate_page(mem[page_address]);
+            }
+        }
+        deallocate_page(page_table_page);
+    }
+    else {
+        printf("Invalid process number. Must be 0-63\n");
+    }
+}
+
 
 void print_page_free_map(void)
 {
@@ -83,7 +107,7 @@ void print_page_free_map(void)
 
         if ((i + 1) % 16 == 0)
             putchar('\n');
-    }
+    }  
 }
 
 
@@ -126,9 +150,23 @@ int main(int argc, char *argv[]) {
             new_process(atoi(argv[i+1]), atoi(argv[i+2]));
             i += 2;
         }
+        // kp n: kill process n and free all its pages.
+        else if (strcmp(argv[i], "kp") == 0) {
+            kill_process(atoi(argv[++i]));
+        }
+        // sb n a b: For process n at virtual address a, store the value b.
+        else if (strcmp(argv[i], "sb") == 0) {
+            printf("store value\n");
+            // TODO: actual implementation
+        }
+        // lb n a: For process n, get the value at virtual address a.
+        else if (strcmp(argv[i], "lb") == 0) {
+            printf("list value\n");
+            // TODO: actual implementation
+        }      
         else {
             fprintf(stderr, "usage: ptsim commands, \'%s\' not recognized\n", argv[i]);
             return 1;
         }
-    }
+    } 
 }
