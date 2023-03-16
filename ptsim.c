@@ -11,8 +11,7 @@
 #define PTP_OFFSET 64 // How far offset in page 0 is the page table pointer table
 
 
-// Simulated RAM
-unsigned char mem[MEM_SIZE];
+unsigned char mem[MEM_SIZE]; // simulated RAM
 
 
 int get_address(int page, int offset) {
@@ -20,7 +19,18 @@ int get_address(int page, int offset) {
 }
 
 
-// Initialize RAM - ELIZABETH: do we need to initialize everything to 0 in this function?
+int get_physical_address(proc_num, virt_addr) {
+    int ptp_num = mem[proc_num + PTP_OFFSET];
+    int ptp_addr = get_address(ptp_num, 0);
+
+    int virt_page = virt_addr >> 8;
+    int offset = virt_addr & 255;
+
+    int phys_page = mem[ptp_addr + virt_page];
+    return (phys_page << PAGE_SHIFT) | offset;
+}
+
+
 void initialize_mem(void) {
     memset(mem, 0, MEM_SIZE);
 
@@ -45,7 +55,7 @@ int allocate_page() {
     return 0xff; // indicating no free pages
 }
 
-// NEW BY ELIZABETH
+
 void deallocate_page(int p) {
     if ((0 <= p) && (p < 64)) {
         mem[p] = 0;
@@ -78,8 +88,9 @@ void new_process(int proc_num, int page_count) {
     }
 }
 
+
 void kill_process(int p) {
-    if ((0 <= p) && (p < 64)) {
+    if ((0 <= p) && (p < 192)) {
         int page_table_page = mem[p + PTP_OFFSET];
         
         for (int offset = 0; offset <= 255; offset++) {
@@ -96,8 +107,21 @@ void kill_process(int p) {
 }
 
 
-void print_page_free_map(void)
-{
+void store_value(proc_num, virt_addr, value) {
+    int phys_addr = get_physical_address(proc_num, virt_addr);
+    mem[phys_addr] = value;
+    printf("Store proc %d: %d => %d, value=%d\n", proc_num, virt_addr, phys_addr, value);
+}
+
+
+void load_value(proc_num, virt_addr) {
+    int phys_addr = get_physical_address(proc_num, virt_addr);
+    int value = mem[phys_addr];
+    printf("Load proc %d: %d => %d, value=%d\n", proc_num, virt_addr, phys_addr, value);
+}
+
+
+void print_page_free_map(void) {
     printf("--- PAGE FREE MAP ---\n");
 
     for (int i = 0; i < 64; i++) {
@@ -150,19 +174,14 @@ int main(int argc, char *argv[]) {
             new_process(atoi(argv[i+1]), atoi(argv[i+2]));
             i += 2;
         }
-        // kp n: kill process n and free all its pages.
         else if (strcmp(argv[i], "kp") == 0) {
             kill_process(atoi(argv[++i]));
         }
-        // sb n a b: For process n at virtual address a, store the value b.
         else if (strcmp(argv[i], "sb") == 0) {
-            printf("store value\n");
-            // TODO: actual implementation
+            store_value(atoi(argv[++i]), atoi(argv[++i]), atoi(argv[++i]));
         }
-        // lb n a: For process n, get the value at virtual address a.
         else if (strcmp(argv[i], "lb") == 0) {
-            printf("list value\n");
-            // TODO: actual implementation
+            load_value(atoi(argv[++i]), atoi(argv[++i]));
         }      
         else {
             fprintf(stderr, "usage: ptsim commands, \'%s\' not recognized\n", argv[i]);
