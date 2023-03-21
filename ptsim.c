@@ -178,10 +178,15 @@ int main(int argc, char *argv[]) {
             kill_process(atoi(argv[++i]));
         }
         else if (strcmp(argv[i], "sb") == 0) {
-            store_value(atoi(argv[++i]), atoi(argv[++i]), atoi(argv[++i]));
+            int proc_num = atoi(argv[++i]);
+            int virt_addr = atoi(argv[++i]);
+            int value = atoi(argv[++i]);
+            store_value(proc_num, virt_addr, value);
         }
         else if (strcmp(argv[i], "lb") == 0) {
-            load_value(atoi(argv[++i]), atoi(argv[++i]));
+            int proc_num = atoi(argv[++i]);
+            int virt_addr = atoi(argv[++i]);
+            load_value(proc_num, virt_addr);
         }      
         else {
             fprintf(stderr, "usage: ptsim commands, \'%s\' not recognized\n", argv[i]);
